@@ -1,7 +1,11 @@
 import setuptools
 
-with open("README", 'r') as f:
+with open("README.md", 'r') as f:
     long_description = f.read()
+
+requirements = ['requests>=2.22.0', ]
+
+test_requirements = ['pytest>=3', ]
 
 setuptools.setup(
    name='datagym',
@@ -10,6 +14,8 @@ setuptools.setup(
    author='Alexej Penner, Johannes Pflugmacher',
    author_email='support@datagym.ai',
    url='https://www.datagym.ai/',
-   packages=setuptools.find_packages(),
-   install_requires=["requests>=2.22.0"],
+   packages=setuptools.find_packages(include=['datagym', 'datagym.*']),
+   install_requires=requirements,
+   test_suite='tests',
+   tests_require=test_requirements,
 )
