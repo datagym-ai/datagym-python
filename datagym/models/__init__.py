@@ -1,1 +1,1 @@
-from datagym.models.project import Project
+from datagym.models.project import Project, Dataset

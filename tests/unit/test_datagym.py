@@ -44,5 +44,5 @@ class TestClient:
     def test_request_success(self, client):
         with patch('datagym.client.requests.request') as mock_get:
             mock_get.return_value.ok = True
-            response = client._request("GET", "endpoint", None)
+            response = client._request("GET", "endpoint", None, None)
             assert response is not None

@@ -1,3 +1,6 @@
+from datagym.models.image import Image
+
+
 class Dataset:
 
     def __init__(self, data):
@@ -6,5 +9,14 @@ class Dataset:
         self.short_description = data['shortDescription']
         self.timestamp = data['timestamp']
         self.owner = data['owner']
-        self.images_count = data['imagesCount']
+        if 'imagesCount' in data:
+            self.images_count = data['imagesCount']
+        else:
+            self.images_count = len(data['images'])
+
         self.project_count = data['projectCount']
+
+        if 'images' in data:
+            self.images = [Image(image_data) for image_data in data['images']]
+        else:
+            self.images = []

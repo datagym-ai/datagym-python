@@ -5,6 +5,7 @@ wrong on the client side. Both of these classes extend
 :class:`.DatagymException`.
 All other exceptions are subclassed from :class:`.ClientException`.
 """
+from typing import List
 
 
 class DatagymException(Exception):
@@ -13,8 +14,36 @@ class DatagymException(Exception):
 
 class APIException(DatagymException):
     """Indicate exception that involve responses from DataGyms's API."""
+    def __init__(self,
+                 status_code: int = None,
+                 key: str = None,
+                 params: List[str] = None,
+                 msg: str = None,
+                 code: int = None,
+                 details: List = None):
 
-    def __init__(self, status: int, error: str, message: str, timestamp: int, path: str):
+        code = status_code if status_code else code
+
+        error_str = ''' 
+                        HTTP {} 
+                        key = {}, 
+                        msg = {}, 
+                        params = {}
+                        details = {}
+                    '''.format(code, key, msg, ", ".join(params), ", ".join(details))
+        super().__init__(error_str)
+
+
+class ClientException(DatagymException):
+    """Indicate exceptions that don't involve interaction with Reddit's API."""
+
+    def __init__(self,
+                 status_code: int = None,
+                 status: int = None,
+                 error: str = None,
+                 message: str = None,
+                 timestamp: int = None,
+                 path: str= None):
         """Initialize an instance of APIException.
         :param status: The status code set on DataGym's end.
         :param error: The error type set on DataGym's end.
@@ -22,6 +51,7 @@ class APIException(DatagymException):
         :param timestamp: The associated time when the error occurred.
         :param message: The associated api endpoint for the error.
         """
+        status = status_code if status_code else status
         error_str = "{} {}: '{}'".format(status, error, message)
 
         super().__init__(error_str)
@@ -32,8 +62,11 @@ class APIException(DatagymException):
         self.path = path
 
 
-class ClientException(DatagymException):
-    """Indicate exceptions that don't involve interaction with Reddit's API."""
+class InvalidTokenException(ClientException):
+    """Indicate exceptions caused by invalid token."""
+    def __init__(self):
+        error_str = "Invalid Token"
+        super().__init__(error_str)
 
 
 class MissingRequiredAttributeException(ClientException):
