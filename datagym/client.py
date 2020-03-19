@@ -2,8 +2,8 @@ import requests
 import json
 import logging
 
-from typing import List, Dict
-from .endpoints import API_PATH, BASE_PATH
+from typing import List, Dict, Set
+from .endpoints import Endpoint
 from .models import Project, Dataset
 from .exceptions import APIException, InvalidTokenException, ClientException
 
@@ -13,19 +13,22 @@ logger = logging.getLogger(__name__)
 class Client:
 
     def __init__(self, api_key) -> None:
+        self._endpoint = Endpoint()
         self.__api_key = api_key
         self.__auth = {"Authorization": f'Token {api_key}'}
+
         response = self._request(method="HEAD",
-                                 endpoint=API_PATH['project'],
+                                 endpoint=self._endpoint.PROJECT,
                                  headers=self.__auth,
                                  data=None)
+
         if response.status_code != 200:
             raise InvalidTokenException()
 
-    def _request(self, method: str, endpoint: str, headers: Dict, data: Dict) -> requests.Response:
+    def _request(self, method: str, endpoint: str, headers: Dict, data) -> requests.Response:
         try:
             return requests.request(method=method,
-                                    url=BASE_PATH + endpoint,
+                                    url=self._endpoint.BASE_PATH + endpoint,
                                     headers=headers,
                                     json=data)
         except requests.exceptions.RequestException as e:
@@ -47,7 +50,7 @@ class Client:
 
     def get_projects(self) -> List[Project]:
         response = self._request(method="GET",
-                                 endpoint=API_PATH['project'],
+                                 endpoint=self._endpoint.PROJECT,
                                  headers=self.__auth,
                                  data=None)
 
@@ -57,7 +60,7 @@ class Client:
 
     def get_datasets(self) -> List[Dataset]:
         response = self._request(method="GET",
-                                 endpoint=API_PATH['dataset'],
+                                 endpoint=self._endpoint.DATASET,
                                  headers=self.__auth,
                                  data=None)
 
@@ -66,7 +69,7 @@ class Client:
             return [Dataset(dataset) for dataset in content]
 
     def export_labels(self, project_id: str) -> Dict:
-        endpoint = f'{API_PATH["export"]}/{project_id}'
+        endpoint= self._endpoint.export_labels(project_id)
 
         response = self._request(method="GET",
                                  endpoint=endpoint,
@@ -77,7 +80,7 @@ class Client:
             return json.loads(response.content)
 
     def export_labels_url(self, project_id: str) -> str:
-        endpoint = f'{API_PATH["export"]}/{project_id}?token={self.__api_key}'
+        endpoint = self._endpoint.export_labels_url(project_id, self.__api_key)
 
         response = self._request(method="HEAD",
                                  endpoint=endpoint,
@@ -88,7 +91,7 @@ class Client:
             return response.url
 
     def download_image(self, image_id: str, image_format: str, file_path: str) -> None:
-        endpoint = f'{API_PATH["image"]}/{image_id}'
+        endpoint = self._endpoint.download_image(image_id)
 
         response = self._request(method="GET",
                                  endpoint=endpoint,
@@ -100,7 +103,7 @@ class Client:
                 handler.write(response.content)
 
     def download_image_bytes(self, image_id: str):
-        endpoint = f'{API_PATH["image"]}/{image_id}'
+        endpoint = self._endpoint.download_image(image_id)
 
         response = self._request(method="GET",
                                  endpoint=endpoint,
@@ -123,7 +126,7 @@ class Client:
         }
 
         response = self._request(method="POST",
-                                 endpoint=API_PATH['dataset'],
+                                 endpoint=self._endpoint.DATASET,
                                  headers=headers,
                                  data=data)
 
@@ -131,7 +134,7 @@ class Client:
             return Dataset(json.loads(response.content))
 
     def add_dataset(self, dataset_id: str, project_id: str) -> bool:
-        endpoint = f'{API_PATH["project"]}/{project_id}/dataset/{dataset_id}'
+        endpoint = self._endpoint.add_dataset(project_id, dataset_id)
 
         headers = {
             'Content-type': 'application/json',
@@ -142,6 +145,52 @@ class Client:
         response = self._request(method="POST",
                                  endpoint=endpoint,
                                  headers=headers,
+                                 data=None)
+
+        if self._response_valid(response):
+            return True
+
+    def remove_dataset(self, dataset_id: str, project_id: str) -> bool:
+        endpoint = self._endpoint.remove_dataset(project_id, dataset_id)
+
+        headers = {
+            **self.__auth
+        }
+
+        response = self._request(method="DELETE",
+                                 endpoint=endpoint,
+                                 headers=headers,
+                                 data=None)
+
+        if self._response_valid(response):
+            return True
+
+    def create_images(self, dataset_id: str, image_url_set: Set[str]) -> List[Dict]:
+        endpoint = self._endpoint.create_image(dataset_id)
+
+        data = list(image_url_set)
+
+
+        headers = {
+            'Content-Type': 'application/json',
+            "Accept": "application/json",
+             **self.__auth
+        }
+
+        response = self._request(method="POST",
+                                 endpoint=endpoint,
+                                 headers=headers,
+                                 data=data)
+
+        if self._response_valid(response):
+            return json.loads(response.content)
+
+    def delete_image(self, image_id: str):
+        endpoint = self._endpoint.delete_image(image_id)
+
+        response = self._request(method="DELETE",
+                                 endpoint=endpoint,
+                                 headers=self.__auth,
                                  data=None)
 
         if self._response_valid(response):
