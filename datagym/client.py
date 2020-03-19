@@ -25,12 +25,20 @@ class Client:
         if response.status_code != 200:
             raise InvalidTokenException()
 
-    def _request(self, method: str, endpoint: str, headers: Dict, data) -> requests.Response:
+    def __repr__(self):
+        return f'Client(api_key="{self.__api_key}")'
+
+    def __str__(self):
+        return f'Client(api_key="{self.__api_key}")'
+
+    def _request(self, method: str, endpoint: str, headers: dict or None, data: dict or None) -> requests.Response:
         try:
             return requests.request(method=method,
                                     url=self._endpoint.BASE_PATH + endpoint,
                                     headers=headers,
                                     json=data)
+        except requests.exceptions.ConnectionError as e:
+            raise e
         except requests.exceptions.RequestException as e:
             raise e
 
@@ -48,7 +56,7 @@ class Client:
             else:
                 raise ClientException(status_code=response.status_code)
 
-    def get_projects(self) -> List[Project]:
+    def _get_projects_without_images(self) -> List[Project]:
         response = self._request(method="GET",
                                  endpoint=self._endpoint.PROJECT,
                                  headers=self.__auth,
@@ -57,6 +65,24 @@ class Client:
         if self._response_valid(response):
             content = json.loads(response.content)
             return [Project(project) for project in content]
+
+    def get_projects(self) -> List[Project]:
+        projects = self._get_projects_without_images()
+        datasets = self.get_datasets()
+
+        for project in projects:
+            project.update_existing_datasets(datasets)
+
+        return projects
+
+    def get_project_by_name(self, project_name: str) -> Project or None:
+        projects = self.get_projects()
+
+        for project in projects:
+            if project.name == project_name:
+                return project
+
+        return None
 
     def get_datasets(self) -> List[Dataset]:
         response = self._request(method="GET",
@@ -68,8 +94,17 @@ class Client:
             content = json.loads(response.content)
             return [Dataset(dataset) for dataset in content]
 
+    def get_dataset_by_name(self, dataset_name: str) -> Dataset or None:
+        datasets = self.get_datasets()
+
+        for dataset in datasets:
+            if dataset.name == dataset_name:
+                return dataset
+
+        return None
+
     def export_labels(self, project_id: str) -> Dict:
-        endpoint= self._endpoint.export_labels(project_id)
+        endpoint = self._endpoint.export_labels(project_id)
 
         response = self._request(method="GET",
                                  endpoint=endpoint,
@@ -136,15 +171,9 @@ class Client:
     def add_dataset(self, dataset_id: str, project_id: str) -> bool:
         endpoint = self._endpoint.add_dataset(project_id, dataset_id)
 
-        headers = {
-            'Content-type': 'application/json',
-            "Accept": "application/json",
-            **self.__auth
-        }
-
         response = self._request(method="POST",
                                  endpoint=endpoint,
-                                 headers=headers,
+                                 headers=self.__auth,
                                  data=None)
 
         if self._response_valid(response):
@@ -153,33 +182,22 @@ class Client:
     def remove_dataset(self, dataset_id: str, project_id: str) -> bool:
         endpoint = self._endpoint.remove_dataset(project_id, dataset_id)
 
-        headers = {
-            **self.__auth
-        }
-
         response = self._request(method="DELETE",
                                  endpoint=endpoint,
-                                 headers=headers,
+                                 headers=self.__auth,
                                  data=None)
 
         if self._response_valid(response):
             return True
 
-    def create_images(self, dataset_id: str, image_url_set: Set[str]) -> List[Dict]:
+    def create_images_from_urls(self, dataset_id: str, image_url_set: Set[str]) -> List[Dict[str, str]]:
         endpoint = self._endpoint.create_image(dataset_id)
 
         data = list(image_url_set)
 
-
-        headers = {
-            'Content-Type': 'application/json',
-            "Accept": "application/json",
-             **self.__auth
-        }
-
         response = self._request(method="POST",
                                  endpoint=endpoint,
-                                 headers=headers,
+                                 headers=self.__auth,
                                  data=data)
 
         if self._response_valid(response):
