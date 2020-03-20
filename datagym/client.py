@@ -23,8 +23,8 @@ class Client:
                                  headers=self.__auth,
                                  data=None)
 
-        if response.status_code != 200:
-            raise InvalidTokenException()
+        if not response.ok:
+            raise InvalidTokenException(msg_builder=self._msg_builder, key='ex_unauthorized', params=[], code=500)
 
     def __repr__(self):
         return f'Client(api_key="{self.__api_key}")'
@@ -204,7 +204,7 @@ class Client:
         if self._response_valid(response):
             return json.loads(response.content)
 
-    def delete_image(self, image_id: str):
+    def delete_image(self, image_id: str) -> bool:
         endpoint = self._endpoint.delete_image(image_id)
 
         response = self._request(method="DELETE",

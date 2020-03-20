@@ -9,20 +9,18 @@ from typing import List
 from pathlib import Path
 import json
 import re
-
+from pkg_resources import resource_string, ResolutionError
 
 class ExceptionMessageBuilder:
     FILE: str = "en.json"
 
     def __init__(self):
-        data_folder = Path()  # Use Path() to support Windows and Unix file paths and find relative module path
-        file_to_open = data_folder.resolve() / self.FILE
-
         try:
-            with open(file_to_open, "r") as errors_json:
-                self.errors = json.load(errors_json)
+            # Use pkg_resources to support Windows and Unix file paths and find relative module path for file
+            file_to_open = resource_string(__name__, self.FILE)
+            self.errors = json.loads(file_to_open)
 
-        except (OSError, IOError) as e:
+        except ResolutionError as e:
             self.errors = dict()
 
     def built_error_message(self, key: str, params: List[str]) -> str:
@@ -92,6 +90,6 @@ class ClientException(DatagymException):
 class InvalidTokenException(ClientException):
     """Indicate exceptions caused by invalid token."""
 
-    def __init__(self):
+    def __init__(self, **args):
         error_str = "Invalid Token"
-        super().__init__(error_str)
+        super().__init__(**args)
