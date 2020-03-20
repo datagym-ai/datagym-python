@@ -12,16 +12,16 @@ import re
 
 
 class ExceptionMessageBuilder:
-    PATH: str = "datagym/exceptions/"
     FILE: str = "en.json"
 
     def __init__(self):
-        data_folder = Path(self.PATH)  # Use Path() to support Windows and Unix file paths
-        file_to_open = data_folder / self.FILE
+        data_folder = Path()  # Use Path() to support Windows and Unix file paths and find relative module path
+        file_to_open = data_folder.resolve() / self.FILE
 
         try:
             with open(file_to_open, "r") as errors_json:
                 self.errors = json.load(errors_json)
+
         except (OSError, IOError) as e:
             self.errors = dict()
 
