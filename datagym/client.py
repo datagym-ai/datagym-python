@@ -5,7 +5,7 @@ import logging
 from typing import List, Dict, Set
 from .endpoints import Endpoint
 from .models import Project, Dataset
-from .exceptions import APIException, InvalidTokenException, ClientException
+from datagym.exceptions.exceptions import APIException, InvalidTokenException, ClientException, ExceptionMessageBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +14,7 @@ class Client:
 
     def __init__(self, api_key) -> None:
         self._endpoint = Endpoint()
+        self._msg_builder = ExceptionMessageBuilder()
         self.__api_key = api_key
         self.__auth = {"Authorization": f'Token {api_key}'}
 
@@ -43,18 +44,18 @@ class Client:
             raise e
 
     def _response_valid(self, response: requests.Response) -> bool:
-        if response.status_code == 200:
+        if response.ok:
             return True
         elif response.status_code == 500:
             if response.content:
-                raise APIException(**json.loads(response.content))
+                raise APIException(self._msg_builder, **json.loads(response.content))
             else:
-                raise APIException(status_code=response.status_code)
+                response.raise_for_status()
         else:
             if response.content:
-                raise ClientException(**json.loads(response.content))
+                raise ClientException(self._msg_builder, **json.loads(response.content))
             else:
-                raise ClientException(status_code=response.status_code)
+                response.raise_for_status()
 
     def _get_projects_without_images(self) -> List[Project]:
         response = self._request(method="GET",

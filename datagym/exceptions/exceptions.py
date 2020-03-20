@@ -6,6 +6,32 @@ wrong on the client side. Both of these classes extend
 All other exceptions are subclassed from :class:`.ClientException`.
 """
 from typing import List
+from pathlib import Path
+import json
+import re
+
+
+class ExceptionMessageBuilder:
+    PATH: str = "datagym/exceptions/"
+    FILE: str = "en.json"
+
+    def __init__(self):
+        data_folder = Path(self.PATH)  # Use Path() to support Windows and Unix file paths
+        file_to_open = data_folder / self.FILE
+
+        try:
+            with open(file_to_open, "r") as errors_json:
+                self.errors = json.load(errors_json)
+        except (OSError, IOError) as e:
+            self.errors = dict()
+
+    def built_error_message(self, key: str, params: List[str]) -> str:
+        if key in self.errors:
+            error_msg = self.errors[key]
+            error_msg = re.sub("{..}", "", error_msg)
+            return error_msg.format(*params)
+        else:
+            return ""
 
 
 class DatagymException(Exception):
@@ -14,23 +40,19 @@ class DatagymException(Exception):
 
 class APIException(DatagymException):
     """Indicate exception that involve responses from DataGyms's API."""
+
     def __init__(self,
+                 msg_builder: ExceptionMessageBuilder,
                  status_code: int = None,
                  key: str = None,
                  params: List[str] = None,
                  msg: str = None,
                  code: int = None,
                  details: List = None):
-
         code = status_code if status_code else code
-
-        error_str = ''' 
-                        HTTP {} 
-                        key = {}, 
-                        msg = {}, 
-                        params = {}
-                        details = {}
-                    '''.format(code, key, msg, ", ".join(params), ", ".join(details))
+        error_msg = msg_builder.built_error_message(key, params)
+        error_msg = msg if msg and not error_msg else error_msg
+        error_str = f'HTTP {code} | Message: "{error_msg}"'
         super().__init__(error_str)
 
 
@@ -38,12 +60,18 @@ class ClientException(DatagymException):
     """Indicate exceptions that don't involve interaction with Reddit's API."""
 
     def __init__(self,
+                 msg_builder: ExceptionMessageBuilder,
                  status_code: int = None,
                  status: int = None,
                  error: str = None,
                  message: str = None,
                  timestamp: int = None,
-                 path: str= None):
+                 path: str = None,
+                 key: str = None,
+                 params: List[str] = None,
+                 msg: str = None,
+                 code: int = None,
+                 details: List = None):
         """Initialize an instance of APIException.
         :param status: The status code set on DataGym's end.
         :param error: The error type set on DataGym's end.
@@ -51,23 +79,19 @@ class ClientException(DatagymException):
         :param timestamp: The associated time when the error occurred.
         :param message: The associated api endpoint for the error.
         """
-        status = status_code if status_code else status
-        error_str = "{} {}: '{}'".format(status, error, message)
+        if not code:
+            code = status_code if status_code else status
+
+        error_msg = msg_builder.built_error_message(key, params)
+        error_msg = msg if msg and not error_msg else error_msg
+        error_str = f'HTTP {code} | Message: "{error_msg}"'
 
         super().__init__(error_str)
-        self.status = status
-        self.error = error
-        self.message = message
-        self.timestamp = timestamp
-        self.path = path
 
 
 class InvalidTokenException(ClientException):
     """Indicate exceptions caused by invalid token."""
+
     def __init__(self):
         error_str = "Invalid Token"
         super().__init__(error_str)
-
-
-class MissingRequiredAttributeException(ClientException):
-    """Indicate exceptions caused by not including a required attribute."""

@@ -1,0 +1,4 @@
+include datagym/exceptions/en.json
+include HISTORY.rst
+include LICENSE
+include README.rst
