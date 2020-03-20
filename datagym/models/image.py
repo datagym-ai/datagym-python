@@ -10,4 +10,4 @@ class Image:
         return f'<Image {self.__dict__}>'
 
     def __str__(self):
-        return f'<Image {self.__dict__}>'
+        return self.__repr__()

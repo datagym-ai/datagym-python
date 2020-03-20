@@ -15,10 +15,14 @@ class Project:
         self.datasets: List[Dataset] = [Dataset(dataset_response_dict) for dataset_response_dict in data['datasets']]
 
     def __repr__(self):
-        return f'<Project {self.__dict__}>'
+        properties = [f"'{e[0]}': '{e[1]}'" for e in self.__dict__.items() if e[0] != "datasets"]
+        properties += ["'datasets': <List[Dataset] with {} elements>".format(len(self.datasets))]
+        r = "<{class_name} {{{properties}}}>".format(properties=", ".join(properties),
+                                                     class_name=self.__class__.__name__)
+        return r
 
     def __str__(self):
-        return f'<Project {self.__dict__}>'
+        return self.__repr__()
 
     def update_existing_datasets(self, dataset_list: List[Dataset]):
         dataset_ids = [d.id for d in self.datasets]

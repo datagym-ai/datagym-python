@@ -18,10 +18,14 @@ class Dataset:
             self.images: List[Image] = []
 
     def __repr__(self):
-        return f'<Dataset {self.__dict__}>'
+        properties = [f"'{e[0]}': '{e[1]}'" for e in self.__dict__.items() if e[0] != "images"]
+        properties += ["'images': <List[Image] with {} elements>".format(len(self.images))]
+        r = "<{class_name} {{{properties}}}>".format(properties=", ".join(properties),
+                                                     class_name=self.__class__.__name__)
+        return r
 
     def __str__(self):
-        return f'<Dataset {self.__dict__}>'
+        return self.__repr__()
 
     def get_images_by_name(self, image_name: str, regex: bool = False) -> List[Image]:
         if regex:
