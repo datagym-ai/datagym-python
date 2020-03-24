@@ -12,6 +12,7 @@ class Endpoint:
     _remove_dataset: str = "api/v1/project/{project_id}/dataset/{dataset_id}/remove"
     _create_image: str = "api/v1/image/{dataset_id}/url"
     _delete_image: str = "api/v1/image/{image_id}"
+    _get_dataset_by_id: str = "api/v1/dataset/{dataset_id}"
 
     def export_labels(self, project_id: str) -> str:
         return self._export_labels.format(project_id=project_id)
@@ -33,3 +34,6 @@ class Endpoint:
 
     def delete_image(self, image_id: str) -> str:
         return self._delete_image.format(image_id=image_id)
+
+    def get_dataset_by_id(self, dataset_id: str) -> str:
+        return self._get_dataset_by_id.format(dataset_id=dataset_id)

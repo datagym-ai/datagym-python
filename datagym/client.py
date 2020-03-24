@@ -91,6 +91,11 @@ class Client:
         return projects
 
     def get_project_by_name(self, project_name: str) -> Project or None:
+        """
+
+        :type project_name: str
+        :rtype: Project
+        """
         projects = self.get_projects()
 
         for project in projects:
@@ -115,6 +120,20 @@ class Client:
         for dataset in datasets:
             if dataset.name == dataset_name:
                 return dataset
+
+        return None
+
+    def get_dataset_by_id(self, dataset_id: str) -> Dataset or None:
+        endpoint = self._endpoint.get_dataset_by_id(dataset_id)
+
+        response = self._request(method="GET",
+                                 endpoint=endpoint,
+                                 headers=self.__auth,
+                                 data=None)
+
+        if self._response_valid(response):
+            content = json.loads(response.content)
+            return Dataset(content)
 
         return None
 
