@@ -35,6 +35,9 @@ class Project:
 
         return None
 
+    def get_images(self,) -> List[Image]:
+        return [img for dataset in self.datasets for img in dataset.images]
+
     def get_images_by_name(self, image_name: str, regex: bool = False) -> List[Image]:
         image_list = []
 

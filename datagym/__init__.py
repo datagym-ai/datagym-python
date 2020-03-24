@@ -1,1 +1,1 @@
-from datagym.client import Client
+from datagym.client import Client  # noqa

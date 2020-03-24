@@ -2,10 +2,14 @@ import requests
 import json
 import logging
 
+from pathlib import Path
 from typing import List, Dict, Set
 from .endpoints import Endpoint
-from .models import Project, Dataset
-from datagym.exceptions.exceptions import APIException, InvalidTokenException, ClientException, ExceptionMessageBuilder
+from .models import Project, Dataset, Image
+from datagym.exceptions.exceptions import APIException, \
+    InvalidTokenException, \
+    ClientException, \
+    ExceptionMessageBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +28,9 @@ class Client:
                                  data=None)
 
         if not response.ok:
-            raise InvalidTokenException(msg_builder=self._msg_builder, key='ex_unauthorized', params=[], code=500)
+            raise InvalidTokenException(msg_builder=self._msg_builder,
+                                        key='ex_unauthorized',
+                                        params=[], code=500)
 
     def __repr__(self):
         return f'Client(api_key="{self.__api_key}")'
@@ -32,7 +38,13 @@ class Client:
     def __str__(self):
         return f'Client(api_key="{self.__api_key}")'
 
-    def _request(self, method: str, endpoint: str, headers: dict or None, data: dict or None) -> requests.Response:
+    def _request(
+            self,
+            method: str,
+            endpoint: str,
+            headers: dict or None,
+            data: dict or None
+    ) -> requests.Response:
         try:
             return requests.request(method=method,
                                     url=self._endpoint.BASE_PATH + endpoint,
@@ -48,12 +60,14 @@ class Client:
             return True
         elif response.status_code == 500:
             if response.content:
-                raise APIException(self._msg_builder, **json.loads(response.content))
+                raise APIException(self._msg_builder,
+                                   **json.loads(response.content))
             else:
                 response.raise_for_status()
         else:
             if response.content:
-                raise ClientException(self._msg_builder, **json.loads(response.content))
+                raise ClientException(self._msg_builder,
+                                      **json.loads(response.content))
             else:
                 response.raise_for_status()
 
@@ -126,8 +140,11 @@ class Client:
         if self._response_valid(response):
             return response.url
 
-    def download_image(self, image_id: str, image_format: str, file_path: str) -> None:
-        endpoint = self._endpoint.download_image(image_id)
+    def download_image(self, image: Image, file_path: str) -> None:
+        endpoint = self._endpoint.download_image(image.id)
+
+        path_dir = Path(file_path)
+        path_file = path_dir.joinpath(image.image_name)
 
         response = self._request(method="GET",
                                  endpoint=endpoint,
@@ -135,7 +152,7 @@ class Client:
                                  data=None)
 
         if self._response_valid(response):
-            with open(f'{file_path}{image_id}.{image_format}', 'wb') as handler:
+            with open(path_file, 'wb') as handler:
                 handler.write(response.content)
 
     def download_image_bytes(self, image_id: str):
