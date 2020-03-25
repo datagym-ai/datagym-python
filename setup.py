@@ -1,6 +1,6 @@
 import setuptools
 
-with open("README.md", 'r') as f:
+with open("README.rst", 'r') as f:
     long_description = f.read()
 
 with open('HISTORY.rst') as history_file:
@@ -12,7 +12,7 @@ test_requirements = ['pytest>=3', ]
 
 setuptools.setup(
    name='datagym',
-   version='0.1.4',
+   version='0.1.5',
    description='Datagym Python API Wrapper',
    author='Alexej Penner, Johannes Pflugmacher',
    author_email='support@datagym.ai',
@@ -24,7 +24,7 @@ setuptools.setup(
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
+       'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
