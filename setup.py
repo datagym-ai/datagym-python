@@ -12,7 +12,7 @@ test_requirements = ['pytest>=3', ]
 
 setuptools.setup(
    name='datagym',
-   version='0.1.5',
+   version='0.1.6',
    description='Datagym Python API Wrapper',
    author='Alexej Penner, Johannes Pflugmacher',
    author_email='support@datagym.ai',
@@ -21,10 +21,11 @@ setuptools.setup(
    classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
-       'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
