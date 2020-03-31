@@ -25,7 +25,7 @@ Requirements
 
 * **Initial Project:** `Setup your first Project`_ and/or label some images in your Dummy Project
 
-    .. _`Setup your first Project`: https://www.datagym.ai/pricing/
+    .. _`Setup your first Project`: https://docs.datagym.ai/documentation/getting-started
 
 * **API Token:** In order to access your Dummy Project via our Python API you need to `create an API Token`_
 
