@@ -13,16 +13,22 @@ AI-assisted annotation tools reduce manual labeling effort, give you more time t
 * Documentation: https://docs.datagym.ai/documentation/python-api/
 * GitHub: https://github.com/datagym-ai/datagym-python
 
-============
+
 Requirements
-============
+------------
 
 * **Python Version:** Python 3.6, 3.7, 3.8, or later
-* **DataGym Account**: If you haven't got a DataGym account yet, please SignUp_:
+
+* **DataGym Account:** If you haven't got a DataGym account yet, please SignUp_.
+
     .. _SignUp: https://www.datagym.ai/pricing/
+
 * **Initial Project:** `Setup your first Project`_ and/or label some images in your Dummy Project
+
     .. _`Setup your first Project`: https://www.datagym.ai/pricing/
+
 * **API Token:** In order to access your Dummy Project via our Python API you need to `create an API Token`_
+
     .. _`create an API Token`: https://docs.datagym.ai/documentation/api-token/manage-api-token#create-tokens
 
 
