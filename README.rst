@@ -1,9 +1,8 @@
-=========
-datagym
-=========
+==================
+DataGym Python API
+==================
 
-Python API Wrapper for DATAGYM (https://www.datagym.ai
-) - the AI-assisted image annotation tool.
+Python API Wrapper for DataGym (https://www.datagym.ai) - the AI-assisted image annotation tool.
 You can easily access your Projects, Datasets, Images and labeled data
 from the DATAGYM backend through this package.
 
@@ -13,6 +12,8 @@ AI-assisted annotation tools reduce manual labeling effort, give you more time t
 * Free software: BSD license
 * Documentation: https://docs.datagym.ai/documentation/python-api/
 * GitHub: https://github.com/datagym-ai/datagym-python
+
+
 
 First Steps
 -----------
@@ -36,8 +37,8 @@ Create your first DATAGYM API Client:
 Features
 --------
 
-* Fetch Projects
-* Export labeled data from projects
+* Fetch Project, Datasets, Images
+* Export labeled data from Projects
 * Create Datasets
-* Upload/Download images
 * Add Datasets to Projects
+* Upload/Download images
