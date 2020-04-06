@@ -24,6 +24,7 @@ class Client:
        client = Client(api_key='API_KEY')
 
     """
+
     def __init__(self, api_key: str) -> None:
         """ Initializes DataGym Client instance
 
@@ -386,3 +387,19 @@ class Client:
 
         if self._response_valid(response):
             return True
+
+    def import_label_data(self, project_id: str, label_data: Dict) -> Dict:
+        """ Import labeled image data into DataGym Projects
+
+        :param Dict labels: Labels in JSON Format. See DataGym Docs for more information
+        :returns: List of Errors if JSON is malformed or data is invalid
+        """
+        endpoint = self._endpoint.import_labels(project_id=project_id)
+
+        response = self._request(method="POST",
+                                 endpoint=endpoint,
+                                 headers=self.__auth,
+                                 data=label_data)
+
+        if self._response_valid(response):
+            return json.loads(response.content)

@@ -22,6 +22,7 @@ class Endpoint:
     _create_image: str = "api/v1/image/{dataset_id}/url"
     _delete_image: str = "api/v1/image/{image_id}"
     _get_dataset_by_id: str = "api/v1/dataset/{dataset_id}"
+    _import_labels: str = "api/v1/project/{project_id}/prediction"
 
     def export_labels(self, project_id: str) -> str:
         return self._export_labels.format(project_id=project_id)
@@ -49,3 +50,6 @@ class Endpoint:
 
     def get_dataset_by_id(self, dataset_id: str) -> str:
         return self._get_dataset_by_id.format(dataset_id=dataset_id)
+
+    def import_labels(self, project_id: str):
+        return self._import_labels.format(project_id=project_id)
