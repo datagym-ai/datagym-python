@@ -56,6 +56,7 @@ Features
 
 * Fetch Project, Datasets, Images
 * Export labeled data from Projects
+* Import labeled data into Projects
 * Create Datasets
 * Add Datasets to Projects
 * Upload/Download images
