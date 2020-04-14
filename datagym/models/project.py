@@ -1,6 +1,6 @@
 from datagym.models.dataset import Dataset, Image
 from typing import List, Dict
-
+from textwrap import indent
 
 class Project:
     """ The Project class is a model of the DataGym.io Project
@@ -43,7 +43,18 @@ class Project:
         return r
 
     def __str__(self):
-        return self.__repr__()
+        """ Return useful representation of a the Project when called with print()
+
+                :return: Return readable string for the Project
+                """
+        datasets_string_repr = "".join([dataset.__str__() for dataset in self.datasets]).replace('\n', '\n'+4*' ')
+
+        string_repr = f'\n{"Project:":<18} {self.name}\n' \
+                      f'{"Project_id:":<18} {self.id}\n' \
+                      f'{"Description:":<18} {self.short_description}\n' \
+                      f'{"Datasets:":<18} {len(self.datasets)} \n' \
+                      f'{40*"-"}\n' + datasets_string_repr
+        return string_repr
 
     def update_existing_datasets(self, dataset_list: List[Dataset]):
         """ Update a Project with a list of Datasets
