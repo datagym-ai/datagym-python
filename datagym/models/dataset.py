@@ -45,7 +45,15 @@ class Dataset:
         return r
 
     def __str__(self):
-        return self.__repr__()
+        """ Return useful representation of a the Dataset when called with print()
+
+                :return: Return readable string for the Dataset
+                """
+        string_repr = f'\n{"Dataset:":<18} {self.name}\n' \
+                      f'{"Dataset_id:":<18} {self.id}\n' \
+                      f'{"Description:":<18} {self.short_description}\n' \
+                      f'{"Images:":<18} {len(self.images)} \n'
+        return string_repr
 
     def get_images_by_name(self, image_name: str, regex: bool = False) -> List[Image]:
         """ Get Images by a specific name or search term

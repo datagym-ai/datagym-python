@@ -31,4 +31,12 @@ class Image:
         return f'<Image {self.__dict__}>'
 
     def __str__(self):
-        return self.__repr__()
+        """ Return useful representation of a the Image when called with print()
+
+        :return: Return readable string for the Image
+        """
+        string_repr = f'\n{"Image:":<18} {self.image_name}\n' \
+                      f'{"Image_id:":<18} {self.id}\n' \
+                      f'{"Image type:":<18} {self.image_type}\n' \
+                      f'{"Image timestamp:":<18} {self.timestamp} \n'
+        return string_repr
