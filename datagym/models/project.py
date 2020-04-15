@@ -1,6 +1,6 @@
 from datagym.models.dataset import Dataset, Image
 from typing import List, Dict
-from textwrap import indent
+
 
 class Project:
     """ The Project class is a model of the DataGym.io Project
