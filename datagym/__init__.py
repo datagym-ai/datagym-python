@@ -1,3 +1,3 @@
-from datagym.client import Client
-from datagym.importers.coco import Coco
-from datagym.exceptions.exceptions import ClientException, APIException
+from datagym.client import Client   #noqa
+from datagym.importers.coco import Coco   #noqa
+from datagym.exceptions.exceptions import ClientException, APIException   #noqa

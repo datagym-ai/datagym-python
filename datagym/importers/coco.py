@@ -1,5 +1,4 @@
 from typing import Dict, Tuple, List
-import json
 import cv2
 from ..utils.coco_utils import add_to_dict_valuelist, decodeMask
 

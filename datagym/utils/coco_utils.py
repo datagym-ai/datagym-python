@@ -10,6 +10,7 @@ def add_to_dict_valuelist(dictionary: Dict, key: AnyStr, value) -> Dict:
 
     return dictionary
 
+
 def decodeMask(R):
     """
     Decode binary mask M encoded via run-length encoding.
@@ -17,7 +18,7 @@ def decodeMask(R):
     :return: M (bool 2D array) : decoded binary mask
     """
     N = len(R['counts'])
-    M = np.zeros( (R['size'][0]*R['size'][1], ), dtype=np.uint8)
+    M = np.zeros((R['size'][0]*R['size'][1], ), dtype=np.uint8)
     n = 0
     val = 1
     for pos in range(N):
