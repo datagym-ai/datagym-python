@@ -2,7 +2,7 @@ import requests
 import json
 
 from pathlib import Path
-from typing import List, Dict, Set
+from typing import List, Dict
 from .endpoints import Endpoint
 from .models import Project, Dataset, Image
 from datagym.exceptions.exceptions import (APIException,
@@ -24,6 +24,8 @@ class Client:
        client = Client(api_key='API_KEY')
 
     """
+
+    MAX_NUM_URLS_PER_UPLOAD = 50
 
     def __init__(self, api_key: str) -> None:
         """ Initializes DataGym Client instance
@@ -277,13 +279,11 @@ class Client:
     def create_dataset(
             self,
             name: str,
-            owner: str,
             short_description: str = None
     ) -> Dataset:
         """ Create Dataset in DataGym.io
 
         :param str name: The name of the dataset
-        :param str owner: The ID of the owner
         :param str short_description: An optional description of the Dataset
         :returns: The newly created Dataset
         :rtype: Dataset
@@ -291,7 +291,6 @@ class Client:
         """
         data = {
             "name": name,
-            "owner": owner,
             "shortDescription": short_description
         }
         headers = {
@@ -348,27 +347,47 @@ class Client:
 
     def create_images_from_urls(self,
                                 dataset_id: str,
-                                image_url_set: Set[str]
+                                image_url_list: List[str]
                                 ) -> List[Dict[str, str]]:
         """ Add Images to a Dataset from a list of URLs
 
         :param dataset_id: The Dataset ID
-        :param image_url_set: A Set of URLs referencing images
+        :param image_url_list: A List of URLs referencing images
         :returns: A list of errors occurred during the Image upload
         :rtype: List[Dict[str, str]]
 
         """
         endpoint = self._endpoint.create_image(dataset_id)
 
-        data = list(image_url_set)
+        if len(image_url_list) < self.MAX_NUM_URLS_PER_UPLOAD:
 
-        response = self._request(method="POST",
-                                 endpoint=endpoint,
-                                 headers=self.__auth,
-                                 data=data)
+            response = self._request(method="POST",
+                                     endpoint=endpoint,
+                                     headers=self.__auth,
+                                     data=image_url_list)
+            if self._response_valid(response):
+                return json.loads(response.content)
+        # If the url List contains a large number of urls it is split into mini batches for upload
+        else:
+            response = []
 
-        if self._response_valid(response):
-            return json.loads(response.content)
+            for i in range(0, len(image_url_list), self.MAX_NUM_URLS_PER_UPLOAD):
+                if i + self.MAX_NUM_URLS_PER_UPLOAD >= len(image_url_list):
+                    slice = image_url_list[i:]
+                else:
+                    slice = image_url_list[i:i+self.MAX_NUM_URLS_PER_UPLOAD]
+
+                partial_response = self._request(method="POST",
+                                                 endpoint=endpoint,
+                                                 headers=self.__auth,
+                                                 data=slice)
+
+                if self._response_valid(partial_response):
+                    response += json.loads(partial_response.content)
+                else:
+                    break
+
+            return response
 
     def delete_image(self, image: Image) -> bool:
         """ Deletes an Image from a Dataset
@@ -388,18 +407,43 @@ class Client:
         if self._response_valid(response):
             return True
 
-    def import_label_data(self, project_id: str, label_data: Dict) -> Dict:
+    def import_label_data(self, project_id: str, label_data: Dict) -> List:
         """ Import labeled image data into DataGym Projects
 
-        :param Dict labels: Labels in JSON Format. See DataGym Docs for more information
+        :param str project_id: Project_id of your project,
+            use client.get_project_by_name(project_name=PROJECT_NAME).id to get the id for your project
+        :param Dict label_data: Labels in JSON Format. See DataGym Docs for more information
         :returns: List of Errors if JSON is malformed or data is invalid
         """
         endpoint = self._endpoint.import_labels(project_id=project_id)
 
-        response = self._request(method="POST",
-                                 endpoint=endpoint,
-                                 headers=self.__auth,
-                                 data=label_data)
+        if len(label_data) < self.MAX_NUM_URLS_PER_UPLOAD:
 
-        if self._response_valid(response):
-            return json.loads(response.content)
+            response = self._request(method="POST",
+                                     endpoint=endpoint,
+                                     headers=self.__auth,
+                                     data=label_data)
+
+            if self._response_valid(response):
+                return json.loads(response.content)
+        # If the label List contains a large number of labeled images it is split into mini batches for upload
+        else:
+            response = []
+
+            for i in range(0, len(label_data), self.MAX_NUM_URLS_PER_UPLOAD):
+                if i + self.MAX_NUM_URLS_PER_UPLOAD >= len(label_data):
+                    mini_batch = label_data[i:]
+                else:
+                    mini_batch = label_data[i:i + self.MAX_NUM_URLS_PER_UPLOAD]
+
+                partial_response = self._request(method="POST",
+                                                 endpoint=endpoint,
+                                                 headers=self.__auth,
+                                                 data=mini_batch)
+
+                if self._response_valid(partial_response):
+                    response += json.loads(partial_response.content)
+                else:
+                    break
+
+            return response
