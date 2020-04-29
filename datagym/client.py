@@ -9,6 +9,7 @@ from datagym.exceptions.exceptions import (APIException,
                                            InvalidTokenException,
                                            ClientException,
                                            ExceptionMessageBuilder)
+from datagym.utils.loadingbar import progressbar
 
 
 class Client:
@@ -371,7 +372,7 @@ class Client:
         else:
             response = []
 
-            for i in range(0, len(image_url_list), self.MAX_NUM_URLS_PER_UPLOAD):
+            for i in progressbar(range(0, len(image_url_list), self.MAX_NUM_URLS_PER_UPLOAD), "Uploading image urls: ", 40):
                 if i + self.MAX_NUM_URLS_PER_UPLOAD >= len(image_url_list):
                     slice = image_url_list[i:]
                 else:
@@ -430,7 +431,7 @@ class Client:
         else:
             response = []
 
-            for i in range(0, len(label_data), self.MAX_NUM_URLS_PER_UPLOAD):
+            for i in progressbar(range(0, len(label_data), self.MAX_NUM_URLS_PER_UPLOAD), "Uploading annotations: ", 40):
                 if i + self.MAX_NUM_URLS_PER_UPLOAD >= len(label_data):
                     mini_batch = label_data[i:]
                 else:
