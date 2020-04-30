@@ -1,6 +1,6 @@
 import requests
 import json
-
+import logging
 from pathlib import Path
 from typing import List, Dict
 from .endpoints import Endpoint
@@ -8,8 +8,11 @@ from .models import Project, Dataset, Image
 from datagym.exceptions.exceptions import (APIException,
                                            InvalidTokenException,
                                            ClientException,
+                                           ClientExceptionNonFatal,
                                            ExceptionMessageBuilder)
+
 from datagym.utils.loadingbar import progressbar
+from datagym.constants import WARNING_KEYS
 
 
 class Client:
@@ -27,6 +30,7 @@ class Client:
     """
 
     MAX_NUM_URLS_PER_UPLOAD = 50
+    logger = logging.getLogger(__name__)
 
     def __init__(self, api_key: str) -> None:
         """ Initializes DataGym Client instance
@@ -94,16 +98,17 @@ class Client:
         """
         if response.ok:
             return True
+        elif json.loads(response.content)["key"] in WARNING_KEYS:
+            ClientExceptionNonFatal(self._msg_builder, self.logger, **json.loads(response.content))
+            return False
         elif response.status_code == 500:
             if response.content:
-                raise APIException(self._msg_builder,
-                                   **json.loads(response.content))
+                raise APIException(self._msg_builder, **json.loads(response.content))
             else:
                 response.raise_for_status()
         else:
             if response.content:
-                raise ClientException(self._msg_builder,
-                                      **json.loads(response.content))
+                raise ClientException(self._msg_builder, **json.loads(response.content))
             else:
                 response.raise_for_status()
 
@@ -307,6 +312,8 @@ class Client:
 
         if self._response_valid(response):
             return Dataset(json.loads(response.content))
+        else:   # In case of non-fatal exception
+            return self.get_dataset_by_name("name")
 
     def add_dataset(self, dataset_id: str, project_id: str) -> bool:
         """ Add a Dataset to a Project
@@ -325,6 +332,8 @@ class Client:
                                  data=None)
 
         if self._response_valid(response):
+            return True
+        else:   # In case of non-fatal exception (already attached)
             return True
 
     def remove_dataset(self, dataset_id: str, project_id: str) -> bool:
@@ -372,7 +381,11 @@ class Client:
         else:
             response = []
 
-            for i in progressbar(range(0, len(image_url_list), self.MAX_NUM_URLS_PER_UPLOAD), "Uploading image urls: ", 40):
+            for i in progressbar(
+                    range(0, len(image_url_list), self.MAX_NUM_URLS_PER_UPLOAD),
+                    "Uploading image urls: ",
+                    40
+            ):
                 if i + self.MAX_NUM_URLS_PER_UPLOAD >= len(image_url_list):
                     slice = image_url_list[i:]
                 else:
@@ -431,7 +444,11 @@ class Client:
         else:
             response = []
 
-            for i in progressbar(range(0, len(label_data), self.MAX_NUM_URLS_PER_UPLOAD), "Uploading annotations: ", 40):
+            for i in progressbar(
+                    range(0, len(label_data), self.MAX_NUM_URLS_PER_UPLOAD),
+                    "Uploading annotations: ",
+                    40
+            ):
                 if i + self.MAX_NUM_URLS_PER_UPLOAD >= len(label_data):
                     mini_batch = label_data[i:]
                 else:

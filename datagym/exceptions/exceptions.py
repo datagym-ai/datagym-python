@@ -9,6 +9,7 @@ on the client side. Both of these classes extend
 from typing import List
 import json
 import re
+import logging
 from pkg_resources import resource_string, ResolutionError
 
 
@@ -128,6 +129,48 @@ class ClientException(DatagymException):
         error_str = f'HTTP {code} | Message: "{error_msg}"'
 
         super().__init__(error_str)
+
+
+class ClientExceptionNonFatal:
+    """Indicate exceptions that involve wrong input from the user and lead to non-fatal exception."""
+
+    def __init__(self,
+                 msg_builder: ExceptionMessageBuilder,
+                 logger: logging.Logger,
+                 status_code: int = None,
+                 status: int = None,
+                 error: str = None,
+                 message: str = None,
+                 timestamp: int = None,
+                 path: str = None,
+                 key: str = None,
+                 params: List[str] = None,
+                 msg: str = None,
+                 code: int = None,
+                 details: List = None) -> str:
+        """ Initializes ClientExceptionNonFatal instance
+
+        :param ExceptionMessageBuilder msg_builder: Error message converter
+        :param int status_code: HTTP status code
+        :param str error: Error message provided by DataGym API
+        :param int message: Error message provided by DataGym API
+        :param int timestamp: Timestamp when Error occurred
+        :param str path: API path where error occurred
+        :param int status_code: HTTP status code
+        :param str key: Error key from DataGym API
+        :param List[str] params: Error Values for error message template
+        :param str msg: Error message provided by DataGym API
+        :param int code: HTTP status code
+        :param List details: Error details from the DataGym API
+        """
+        if not code:
+            code = status_code if status_code else status
+
+        warning_msg = msg_builder.built_error_message(key, params)
+        warning_msg = msg if msg and not warning_msg else warning_msg
+        warning_str = f'HTTP {code} | Message: "{warning_msg}"'
+
+        logger.warning(warning_str)
 
 
 class InvalidTokenException(ClientException):
