@@ -1,8 +1,10 @@
+import os
+
 import requests
 import json
 import logging
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, BinaryIO
 from .endpoints import Endpoint
 from .models import Project, Dataset, Image
 from datagym.exceptions.exceptions import (APIException,
@@ -65,14 +67,16 @@ class Client:
             method: str,
             endpoint: str,
             headers: dict or None,
-            data: dict or None
+            json: dict = None,
+            data: BinaryIO or dict = None
     ) -> requests.Response:
         """ Send a HTTP request to a DataGym endpoint
 
         :param str method: The HTTP method (ex. GET, POST, PUT, etc.)
         :param str endpoint: The DataGym API endpoint
         :param dict headers: The HTTP request header
-        :param dict data: The request body as json
+        :param dict json: The request body as json
+        :param dict data: The request body
 
         :raises requests.exceptions.ConnectionError: Connection errors
 
@@ -80,10 +84,20 @@ class Client:
         :rtype: requests.Response
         """
         try:
-            return requests.request(method=method,
-                                    url=self._endpoint.BASE_PATH + endpoint,
-                                    headers=headers,
-                                    json=data)
+            if json:
+                return requests.request(method=method,
+                                        url=self._endpoint.BASE_PATH + endpoint,
+                                        headers=headers,
+                                        json=json)
+            elif data:
+                return requests.request(method=method,
+                                        url=self._endpoint.BASE_PATH + endpoint,
+                                        headers=headers,
+                                        data=data)
+            else:
+                return requests.request(method=method,
+                                        url=self._endpoint.BASE_PATH + endpoint,
+                                        headers=headers)
         except requests.exceptions.ConnectionError as e:
             raise e
         except requests.exceptions.RequestException as e:
@@ -115,8 +129,7 @@ class Client:
     def _is_token_valid(self) -> bool:
         response = self._request(method="HEAD",
                                  endpoint=self._endpoint.PROJECT,
-                                 headers=self.__auth,
-                                 data=None)
+                                 headers=self.__auth)
 
         if not response.ok:
             raise InvalidTokenException(msg_builder=self._msg_builder,
@@ -137,8 +150,7 @@ class Client:
         """
         response = self._request(method="GET",
                                  endpoint=self._endpoint.PROJECT,
-                                 headers=self.__auth,
-                                 data=None)
+                                 headers=self.__auth)
 
         if self._response_valid(response):
             content = json.loads(response.content)
@@ -184,8 +196,7 @@ class Client:
         """
         response = self._request(method="GET",
                                  endpoint=self._endpoint.DATASET,
-                                 headers=self.__auth,
-                                 data=None)
+                                 headers=self.__auth)
 
         if self._response_valid(response):
             content = json.loads(response.content)
@@ -219,8 +230,7 @@ class Client:
 
         response = self._request(method="GET",
                                  endpoint=endpoint,
-                                 headers=self.__auth,
-                                 data=None)
+                                 headers=self.__auth)
 
         if self._response_valid(response):
             return json.loads(response.content)
@@ -237,8 +247,7 @@ class Client:
 
         response = self._request(method="HEAD",
                                  endpoint=endpoint,
-                                 headers=None,
-                                 data=None)
+                                 headers=None)
 
         if self._response_valid(response):
             return response.url
@@ -257,8 +266,7 @@ class Client:
 
         response = self._request(method="GET",
                                  endpoint=endpoint,
-                                 headers=self.__auth,
-                                 data=None)
+                                 headers=self.__auth)
 
         if self._response_valid(response):
             with open(path_file, 'wb') as handler:
@@ -276,8 +284,7 @@ class Client:
 
         response = self._request(method="GET",
                                  endpoint=endpoint,
-                                 headers=self.__auth,
-                                 data=None)
+                                 headers=self.__auth)
 
         if self._response_valid(response):
             return response.content
@@ -308,7 +315,7 @@ class Client:
         response = self._request(method="POST",
                                  endpoint=self._endpoint.DATASET,
                                  headers=headers,
-                                 data=data)
+                                 json=data)
 
         if self._response_valid(response):
             return Dataset(json.loads(response.content))
@@ -328,8 +335,7 @@ class Client:
 
         response = self._request(method="POST",
                                  endpoint=endpoint,
-                                 headers=self.__auth,
-                                 data=None)
+                                 headers=self.__auth)
 
         if self._response_valid(response):
             return True
@@ -349,8 +355,7 @@ class Client:
 
         response = self._request(method="DELETE",
                                  endpoint=endpoint,
-                                 headers=self.__auth,
-                                 data=None)
+                                 headers=self.__auth)
 
         if self._response_valid(response):
             return True
@@ -374,7 +379,7 @@ class Client:
             response = self._request(method="POST",
                                      endpoint=endpoint,
                                      headers=self.__auth,
-                                     data=image_url_list)
+                                     json=image_url_list)
             if self._response_valid(response):
                 return json.loads(response.content)
         # If the url List contains a large number of urls it is split into mini batches for upload
@@ -394,7 +399,7 @@ class Client:
                 partial_response = self._request(method="POST",
                                                  endpoint=endpoint,
                                                  headers=self.__auth,
-                                                 data=slice)
+                                                 json=slice)
 
                 if self._response_valid(partial_response):
                     response += json.loads(partial_response.content)
@@ -415,8 +420,7 @@ class Client:
 
         response = self._request(method="DELETE",
                                  endpoint=endpoint,
-                                 headers=self.__auth,
-                                 data=None)
+                                 headers=self.__auth)
 
         if self._response_valid(response):
             return True
@@ -436,7 +440,7 @@ class Client:
             response = self._request(method="POST",
                                      endpoint=endpoint,
                                      headers=self.__auth,
-                                     data=label_data)
+                                     json=label_data)
 
             if self._response_valid(response):
                 return json.loads(response.content)
@@ -457,7 +461,7 @@ class Client:
                 partial_response = self._request(method="POST",
                                                  endpoint=endpoint,
                                                  headers=self.__auth,
-                                                 data=mini_batch)
+                                                 json=mini_batch)
 
                 if self._response_valid(partial_response):
                     response += json.loads(partial_response.content)
@@ -465,3 +469,34 @@ class Client:
                     break
 
             return response
+
+    def upload_image(self, dataset_id: str, image_path: str, image_name: str = None) -> bool:
+        """ Uploads an Image to a Dataset
+
+        :param str dataset_id: The dataset the image should be uploaded to
+        :param str image_path: The path to the image that should be uploaded
+        :param str image_name: Your prefered image name.
+                                If left empty, it will automatically be extracted from the image path
+        :returns: True if Image was successfully uploaded
+        :rtype: bool
+
+        """
+        endpoint = self._endpoint.upload_image(dataset_id)
+
+        if not image_name:
+            image_name = os.path.basename(image_path)
+
+        files = open(image_path, 'rb')
+
+        headers = {
+            'X-filename': image_name,
+            **self.__auth
+        }
+
+        response = self._request(method="POST",
+                                 endpoint=endpoint,
+                                 headers=headers,
+                                 data=files)
+
+        if self._response_valid(response):
+            return Image(json.loads(response.content))
