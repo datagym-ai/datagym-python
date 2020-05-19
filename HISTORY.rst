@@ -18,3 +18,8 @@ History
 * Added coco importer
 * Removed owner from dataset
 * Url and Label upload in mini batches
+
+0.4.0 (2020-04-27)
+------------------
+* Added warnings for non fatal exceptions
+* Added image upload functionality
