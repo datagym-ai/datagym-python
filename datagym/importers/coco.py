@@ -139,7 +139,7 @@ class Coco:
 
                 label_entry = {
                     "geometry": polygon,
-                    "classifications": {annotation_supercategory + "_type": [annotation_name]}
+                    "classifications": {"subcategory": [annotation_name]}
                 }
 
                 self.coco_images[annotation["image_id"]].add_annotation(label_entry, annotation_supercategory)
@@ -156,7 +156,7 @@ class Coco:
 
                     label_entry = {
                         "geometry": polygon,
-                        "classifications": {annotation_supercategory + "_type": [annotation_name]}
+                        "classifications": {"subcategory": [annotation_name]}
                     }
 
                     self.coco_images[annotation["image_id"]].add_annotation(label_entry, annotation_supercategory)
@@ -178,7 +178,7 @@ class Coco:
             }
             label_entry = {
                 "geometry": [rectangle],
-                "classifications": {annotation_supercategory+"_type": [annotation_name]}
+                "classifications": {"subcategory": [annotation_name]}
             }
 
             self.coco_images[annotation["image_id"]].add_annotation(label_entry, annotation_supercategory)

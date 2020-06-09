@@ -643,6 +643,7 @@
   "ex_max": "{{p0}} must be maximum {{p1}}",
   "ex_length": "{{p0}} must be maximum {{p1}} characters long.",
   "ex_pattern": "{{p0}} must match {{p2}} pattern",
+  "ex_already_contains": "The current {{p0}} already contains this {{p1}}.",
   "ex_gen_contains": "The current {{p0}} already contains this {{p1}}.",
   "ex_gen_does_not_contain": "The current {{p0}} doesn't contain this {{p1}}.",
   "ex_notblank": "{{p0}} cant be blank or null.",

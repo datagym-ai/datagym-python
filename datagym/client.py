@@ -67,7 +67,7 @@ class Client:
             method: str,
             endpoint: str,
             headers: dict or None,
-            json: dict = None,
+            json: list or dict = None,
             data: BinaryIO or dict = None
     ) -> requests.Response:
         """ Send a HTTP request to a DataGym endpoint
@@ -500,3 +500,28 @@ class Client:
 
         if self._response_valid(response):
             return Image(json.loads(response.content))
+
+    def upload_label_config(self, config_id: str, label_config: List[Dict]) -> bool:
+        """ Clears the existing config and replaces it by a new one.
+        Careful with this as clearing the config also clears all associated labels
+
+        :param config_id:
+        :param label_config:
+        :return: True if successful
+        """
+        clear_endpoint = self._endpoint.upload_label_config(config_id)
+        upload_endpoint = self._endpoint.clear_label_config(config_id)
+
+        clear_response = self._request(method="DELETE",
+                                       endpoint=clear_endpoint,
+                                       headers=self.__auth)
+
+        if self._response_valid(clear_response):
+
+            upload_response = self._request(method="PUT",
+                                            endpoint=upload_endpoint,
+                                            headers=self.__auth,
+                                            json=label_config)
+
+            if self._response_valid(upload_response):
+                return upload_response.content
