@@ -60,3 +60,5 @@ Features
 * Create Datasets
 * Add Datasets to Projects
 * Upload/Download images
+* Upload of coco labels
+* Upload of label configuration
