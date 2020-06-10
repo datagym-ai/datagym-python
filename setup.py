@@ -14,7 +14,7 @@ setuptools.setup(
    name='datagym',
    version='0.5.0',
    description='Datagym Python API Wrapper',
-   author='Johannes Pflugmacher',
+   author='Johannes Pflugmacher, Alexej Penner',
    author_email='support@datagym.ai',
    license="BSD license",
    python_requires='>=3.6',
