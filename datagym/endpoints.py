@@ -23,7 +23,7 @@ class Endpoint:
     _delete_image: str = "api/v1/image/{image_id}"
     _get_dataset_by_id: str = "api/v1/dataset/{dataset_id}"
     _import_labels: str = "api/v1/project/{project_id}/prediction"
-    _upload_image: str = "/api/v1/image/{dataset_id}/file"
+    _upload_image: str = "api/v1/image/{dataset_id}/file"
     _clear_label_config: str = "/api/v1/config/{configId}"
     _upload_label_config: str = "/api/v1/config/{configId}"
 
