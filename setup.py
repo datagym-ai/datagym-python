@@ -6,7 +6,14 @@ with open("README.rst", 'r') as f:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['requests>=2.22.0', 'numpy==1.18.3', 'opencv-python==4.2.0.34']
+requirements = [
+    'requests[security]==2.22.0',
+    'numpy==1.18.3',
+    'opencv-python==4.2.0.34',
+    'pyopenssl==19.1.0',
+    'ndg-httpsclient==0.5.1',
+    'pyasn1==0.4.8'
+]
 
 test_requirements = ['pytest>=3', ]
 

@@ -9,7 +9,7 @@ class CocoImage:
     is provided in multiple coco format json files.
     """
 
-    def __init__(self, file_name: str, coco_image_id: str, width: int, height: int, coco_url: str) -> None:
+    def __init__(self, file_name: str, coco_image_id: str, width: int, height: int, coco_url: str = None) -> None:
         """
         The CocoImage class collects these attributes for each image instance.
         :param str file_name: The filename of the image within the filesystem
@@ -200,13 +200,21 @@ class Coco:
         :return: None
         """
         for image in images_data["images"]:
-            value = CocoImage(
+            if "coco_url" in image.keys():
+                value = CocoImage(
+                        file_name=image["file_name"],
+                        coco_image_id=image["id"],
+                        width=image["width"],
+                        height=image["height"],
+                        coco_url=image["coco_url"]
+                )
+            else:
+                value = CocoImage(
                     file_name=image["file_name"],
                     coco_image_id=image["id"],
                     width=image["width"],
-                    height=image["height"],
-                    coco_url=image["coco_url"]
-            )
+                    height=image["height"]
+                )
 
             if image["id"] not in self.coco_images:
                 self.coco_images[image["id"]] = value
