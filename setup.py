@@ -19,7 +19,7 @@ test_requirements = ['pytest>=3', ]
 
 setuptools.setup(
    name='datagym',
-   version='0.5.0',
+   version='0.5.1',
    description='Datagym Python API Wrapper',
    author='Johannes Pflugmacher, Alexej Penner',
    author_email='support@datagym.ai',
