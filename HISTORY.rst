@@ -29,3 +29,8 @@ History
 ------------------
 * Added a label config uploader
 * Adjusted the coco uploader to work together with the label config uploader
+
+
+0.5.1 (2020-08-26)
+------------------
+* Added dependencies to allow requests to deal with 104 error codes
