@@ -60,7 +60,7 @@ class CocoImage:
         if self.file_name in image_ids_dict:
             internal_image_ID = image_ids_dict[self.file_name]
             image_entry = {
-                "internal_image_ID": internal_image_ID,
+                "internal_media_ID": internal_image_ID,
                 "keepData": False,
                 # "image_name": self.file_name,
                 "global_classifications": self.classifications,
