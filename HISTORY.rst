@@ -34,3 +34,8 @@ History
 0.5.1 (2020-08-26)
 ------------------
 * Added dependencies to allow requests to deal with 104 error codes
+
+
+0.5.2 (2021-03-15)
+------------------
+* Changed *_image_id to *_media_id in label imports/exports
