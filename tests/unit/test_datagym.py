@@ -25,6 +25,7 @@ class TestClient:
                         "labelConfigurationId": "LABELID1",
                         "labelIterationId": "LABELITERID1",
                         "owner": "user1",
+                        "mediaType": "IMAGE",
                         "datasets": []
                  }]'''
 

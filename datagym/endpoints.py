@@ -12,18 +12,18 @@ class Endpoint:
 
     PROJECT: str = "api/v1/project"
     DATASET: str = "api/v1/dataset"
-    IMAGE: str = "api/v1/image"
+    MEDIA: str = "api/v1/media"
 
     _export_labels: str = "api/v1/export/{project_id}"
     _export_labels_url: str = "api/v1/export/{project_id}?token={token}"
-    _download_image: str = "api/v1/image/{image_id}"
+    _download_media: str = "api/v1/media/{media_id}"
     _add_dataset: str = "api/v1/project/{project_id}/dataset/{dataset_id}"
     _remove_dataset: str = "api/v1/project/{project_id}/dataset/{dataset_id}/remove"
-    _create_image: str = "api/v1/image/{dataset_id}/url"
-    _delete_image: str = "api/v1/image/{image_id}"
+    _create_image: str = "api/v1/media/{dataset_id}/url"
+    _delete_media: str = "api/v1/media/{media_id}"
     _get_dataset_by_id: str = "api/v1/dataset/{dataset_id}"
     _import_labels: str = "api/v1/project/{project_id}/prediction"
-    _upload_image: str = "api/v1/image/{dataset_id}/file"
+    _upload_media: str = "api/v1/media/{dataset_id}/file"
     _clear_label_config: str = "/api/v1/config/{configId}"
     _upload_label_config: str = "/api/v1/config/{configId}"
 
@@ -34,8 +34,8 @@ class Endpoint:
         return self._export_labels_url.format(project_id=project_id,
                                               token=token)
 
-    def download_image(self, image_id: str) -> str:
-        return self._download_image.format(image_id=image_id)
+    def download_media(self, media_id: str) -> str:
+        return self._download_media.format(media_id=media_id)
 
     def create_image(self, dataset_id: str) -> str:
         return self._create_image.format(dataset_id=dataset_id)
@@ -48,8 +48,8 @@ class Endpoint:
         return self._remove_dataset.format(project_id=project_id,
                                            dataset_id=dataset_id)
 
-    def delete_image(self, image_id: str) -> str:
-        return self._delete_image.format(image_id=image_id)
+    def delete_media(self, media_id: str) -> str:
+        return self._delete_media.format(media_id=media_id)
 
     def get_dataset_by_id(self, dataset_id: str) -> str:
         return self._get_dataset_by_id.format(dataset_id=dataset_id)
@@ -57,8 +57,8 @@ class Endpoint:
     def import_labels(self, project_id: str):
         return self._import_labels.format(project_id=project_id)
 
-    def upload_image(self, dataset_id: str):
-        return self._upload_image.format(dataset_id=dataset_id)
+    def upload_media(self, dataset_id: str):
+        return self._upload_media.format(dataset_id=dataset_id)
 
     def clear_label_config(self, config_id: str):
         return self._clear_label_config.format(configId=config_id)

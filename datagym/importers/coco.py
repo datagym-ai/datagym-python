@@ -58,9 +58,9 @@ class CocoImage:
         :return: image entry as dict if image in image_ids_dict
         """
         if self.file_name in image_ids_dict:
-            internal_image_ID = image_ids_dict[self.file_name]
+            internal_media_ID = image_ids_dict[self.file_name]
             image_entry = {
-                "internal_media_ID": internal_image_ID,
+                "internal_media_ID": internal_media_ID,
                 "keepData": False,
                 # "image_name": self.file_name,
                 "global_classifications": self.classifications,

@@ -1,4 +1,4 @@
-from datagym.models.dataset import Dataset, Image
+from datagym.models.dataset import Dataset
 from typing import List, Dict
 
 
@@ -16,7 +16,6 @@ class Project:
         :param Dict data: Response data from the DataGym API
 
         """
-
         self.id: str = data['id']
         self.name: str = data['name']
         self.short_description: str = data['shortDescription']
@@ -24,7 +23,9 @@ class Project:
         self.label_config_id: str = data['labelConfigurationId']
         self.label_iteration_id: str = data['labelIterationId']
         self.owner: str = data['owner']
+
         self.datasets: List[Dataset] = [Dataset(d) for d in data['datasets']]
+        self.media_type: str = data['mediaType']
 
     def __repr__(self):
         """ Return useful representation of a the Project
@@ -47,13 +48,14 @@ class Project:
 
                 :return: Return readable string for the Project
                 """
-        datasets_string_repr = "".join([dataset.__str__() for dataset in self.datasets]).replace('\n', '\n'+4*' ')
+        datasets_string_repr = "".join([dataset.__str__() for dataset in self.datasets]).replace('\n', '\n' + 4 * ' ')
 
         string_repr = f'\n{"Project:":<18} {self.name}\n' \
                       f'{"Project_id:":<18} {self.id}\n' \
                       f'{"Description:":<18} {self.short_description}\n' \
+                      f'{"Media Type:":<18} {self.media_type}\n' \
                       f'{"Datasets:":<18} {len(self.datasets)} \n' \
-                      f'{40*"-"}\n' + datasets_string_repr
+                      f'{40 * "-"}\n' + datasets_string_repr
         return string_repr
 
     def update_existing_datasets(self, dataset_list: List[Dataset]):
@@ -61,9 +63,9 @@ class Project:
 
         Update only the existing Datasets of a Project. Since the
         api/v1/project endpoint returns Projects with Datasets but
-        without images, this method can be used to switch the
+        without media, this method can be used to switch the
         existing Datasets of a Project with updated Datasets that
-        have Images.
+        have Media.
 
         :param List[Dataset] dataset_list: List of Datasets
 
@@ -82,27 +84,49 @@ class Project:
 
         return None
 
-    def get_images(self) -> List[Image]:
-        """ Get all Images from this Project
+    def get_images(self):
+        """ Get all Media from this Project
+        This function is now deprecated. Please use get_media().
 
-        :returns: List of Images
-        :rtype: List[Image]
+        :returns: List of Images or Videos
+        :rtype: List[Image|Video]
 
         """
-        return [img for dataset in self.datasets for img in dataset.images]
+        return self.get_media()
 
-    def get_images_by_name(self, image_name: str, regex: bool = False) -> List[Image]:
-        """ Get Images by a specific name or search term
+    def get_media(self):
+        """ Get all Media from this Project
 
-        :param str image_name: Image name or search term
+        :returns: List of Images or Videos
+        :rtype: List[Image|Video]
+
+        """
+        return [media for dataset in self.datasets for media in dataset.media]
+
+    def get_images_by_name(self, image_name: str, regex: bool = False):
+        """ Get Media by a specific name or search term
+        This function is now deprecated. Please use get_media_by_name(media_name, regex).
+
+        :param str image_name: Media name or search term
         :param bool regex: If regex is True search with regular expressions
-        :returns: List of Images from this Project
-        :rtype: List[Image]
+        :returns: List of Media from this Dataset
+        :rtype: List[Image|Video]
 
         """
-        image_list = []
+        return self.get_media_by_name(image_name, regex)
+
+    def get_media_by_name(self, media_name: str, regex: bool = False):
+        """ Get Media by a specific name or search term
+
+        :param str media_name: Media name or search term
+        :param bool regex: If regex is True search with regular expressions
+        :returns: List of Media from this Project
+        :rtype: List[Image|Video]
+
+        """
+        media_list = []
 
         for dataset in self.datasets:
-            image_list += dataset.get_images_by_name(image_name, regex)
+            media_list += dataset.get_media_by_name(media_name, regex)
 
-        return image_list
+        return media_list

@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import List, Dict, BinaryIO
 from .endpoints import Endpoint
-from .models import Project, Dataset, Image
+from .models import Project, Dataset, Image, Video
 from datagym.exceptions.exceptions import (APIException,
                                            InvalidTokenException,
                                            ClientException,
@@ -233,7 +233,60 @@ class Client:
                                  headers=self.__auth)
 
         if self._response_valid(response):
-            return json.loads(response.content)
+
+            export_dict = json.loads(response.content)
+
+            for media_export in export_dict[1:]:
+                if 'task_export_url' in media_export:
+                    # Remove the beginning to leave only endpoint
+                    inner_endpoint = media_export['task_export_url'].replace(self._endpoint.BASE_PATH, "")
+
+                    inner_response = self._request(method="GET",
+                                                   endpoint=inner_endpoint,
+                                                   headers=self.__auth)
+
+                    if self._response_valid(inner_response):
+                        temp_label = json.loads(inner_response.content)
+
+                        media_export['labels'] = temp_label
+            return export_dict
+        else:
+            return dict()
+
+    def export_single_video_labels(self, project_id: str, video_id: str) -> Dict:
+        """ Export the labeled data from a specific Video
+
+        :param str project_id: The Project ID
+        :param str video_id: The Video ID
+        :returns: The labeled data as Dictionary
+        :rtype: Dict
+
+        """
+        endpoint = self._endpoint.export_labels(project_id)
+
+        response = self._request(method="GET",
+                                 endpoint=endpoint,
+                                 headers=self.__auth)
+
+        if self._response_valid(response):
+
+            export_dict = json.loads(response.content)
+
+            for media_export in export_dict[1:]:
+                if media_export['internal_media_ID'] == video_id:
+                    if 'task_export_url' in media_export:
+                        # Remove the beginning to leave only endpoint
+                        inner_endpoint = media_export['task_export_url'].replace(self._endpoint.BASE_PATH, "")
+                        inner_response = self._request(method="GET",
+                                                       endpoint=inner_endpoint,
+                                                       headers=self.__auth)
+
+                        if self._response_valid(inner_response):
+                            temp_label = json.loads(inner_response.content)
+                            media_export['labels'] = temp_label
+                    return media_export
+
+            return dict()
 
     def export_labels_url(self, project_id: str) -> str:
         """ Generate a URL to the labeled data from a specific Project
@@ -252,6 +305,41 @@ class Client:
         if self._response_valid(response):
             return response.url
 
+    def download_video(self, video: Video, file_path: str) -> None:
+        """ Download a Video and store it in a specific file path
+
+        :param Video video: The Video Object to be downloaded
+        :param file_path: The destination path for storing the Video
+
+        """
+        video_content = self.download_video_bytes(video)
+        if video_content:
+            path_dir = Path(file_path)
+            path_file = path_dir.joinpath(video.video_name)
+            with open(path_file, 'wb') as handler:
+                handler.write(video_content)
+
+    def download_video_bytes(self, video: Video) -> bytes:
+        """ Download a Video and store it in a specific file path
+
+        :param Video video: The Video Object to be downloaded
+        :returns: Byte stream of the requested Video
+        :rtype: bytes
+
+        """
+        endpoint = self._endpoint.download_media(video.id)
+
+        response = self._request(method="GET",
+                                 endpoint=endpoint,
+                                 headers=self.__auth)
+
+        if self._response_valid(response):
+            inner_response = requests.request(method="GET",
+                                              url=response.content.decode("utf-8"))
+
+            if self._response_valid(inner_response):
+                return inner_response.content
+
     def download_image(self, image: Image, file_path: str) -> None:
         """ Download an Image and store it in a specific file path
 
@@ -259,7 +347,7 @@ class Client:
         :param file_path: The destination path for storing the Image
 
         """
-        endpoint = self._endpoint.download_image(image.id)
+        endpoint = self._endpoint.download_media(image.id)
 
         path_dir = Path(file_path)
         path_file = path_dir.joinpath(image.image_name)
@@ -280,7 +368,7 @@ class Client:
         :rtype: bytes
 
         """
-        endpoint = self._endpoint.download_image(image.id)
+        endpoint = self._endpoint.download_media(image.id)
 
         response = self._request(method="GET",
                                  endpoint=endpoint,
@@ -319,8 +407,8 @@ class Client:
 
         if self._response_valid(response):
             return Dataset(json.loads(response.content))
-        else:   # In case of non-fatal exception
-            return self.get_dataset_by_name("name")
+        else:  # In case of non-fatal exception
+            return self.get_dataset_by_name(name)
 
     def add_dataset(self, dataset_id: str, project_id: str) -> bool:
         """ Add a Dataset to a Project
@@ -339,7 +427,7 @@ class Client:
 
         if self._response_valid(response):
             return True
-        else:   # In case of non-fatal exception (already attached)
+        else:  # In case of non-fatal exception (already attached)
             return True
 
     def remove_dataset(self, dataset_id: str, project_id: str) -> bool:
@@ -394,7 +482,7 @@ class Client:
                 if i + self.MAX_NUM_URLS_PER_UPLOAD >= len(image_url_list):
                     slice = image_url_list[i:]
                 else:
-                    slice = image_url_list[i:i+self.MAX_NUM_URLS_PER_UPLOAD]
+                    slice = image_url_list[i:i + self.MAX_NUM_URLS_PER_UPLOAD]
 
                 partial_response = self._request(method="POST",
                                                  endpoint=endpoint,
@@ -416,7 +504,7 @@ class Client:
         :rtype: bool
 
         """
-        endpoint = self._endpoint.delete_image(image.id)
+        endpoint = self._endpoint.delete_media(image.id)
 
         response = self._request(method="DELETE",
                                  endpoint=endpoint,
@@ -470,18 +558,18 @@ class Client:
 
             return response
 
-    def upload_image(self, dataset_id: str, image_path: str, image_name: str = None) -> bool:
+    def upload_image(self, dataset_id: str, image_path: str, image_name: str = None) -> Image or None:
         """ Uploads an Image to a Dataset
 
         :param str dataset_id: The dataset the image should be uploaded to
         :param str image_path: The path to the image that should be uploaded
         :param str image_name: Your prefered image name.
                                 If left empty, it will automatically be extracted from the image path
-        :returns: True if Image was successfully uploaded
-        :rtype: bool
+        :returns: The Image if it was successfully uploaded, else None
+        :rtype: Image or None
 
         """
-        endpoint = self._endpoint.upload_image(dataset_id)
+        endpoint = self._endpoint.upload_media(dataset_id)
 
         if not image_name:
             image_name = os.path.basename(image_path)
@@ -501,13 +589,13 @@ class Client:
         if self._response_valid(response):
             return Image(json.loads(response.content))
 
-    def upload_label_config(self, config_id: str, label_config: List[Dict]) -> bool:
+    def upload_label_config(self, config_id: str, label_config: List[Dict]) -> bytes or None:
         """ Clears the existing config and replaces it by a new one.
         Careful with this as clearing the config also clears all associated labels
 
         :param config_id:
         :param label_config:
-        :return: True if successful
+        :return: bytes if successful, else None
         """
         clear_endpoint = self._endpoint.upload_label_config(config_id)
         upload_endpoint = self._endpoint.clear_label_config(config_id)

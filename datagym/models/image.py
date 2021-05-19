@@ -16,8 +16,8 @@ class Image:
 
         """
         self.id = data['id']
-        self.image_name = data['imageName']
-        self.image_type = data['imageType']
+        self.image_name = data['mediaName']
+        self.image_type = data['mediaSourceType']
         self.timestamp = data['timestamp']
 
     def __repr__(self):
