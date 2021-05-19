@@ -39,3 +39,9 @@ History
 0.5.2 (2021-03-15)
 ------------------
 * Changed *_image_id to *_media_id in label imports/exports
+
+
+0.6.0 (2021-05-19)
+------------------
+* Added Video functionalities
+* Renamed most instances of image_id to media_id to allow agnostic media usage
