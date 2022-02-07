@@ -8,8 +8,8 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'requests[security]==2.22.0',
-    'numpy==1.18.3',
-    'opencv-python==4.2.0.34',
+    'numpy==1.22.2',
+    'opencv-python==4.5.5.62',
     'pyopenssl==19.1.0',
     'ndg-httpsclient==0.5.1',
     'pyasn1==0.4.8'
@@ -19,7 +19,7 @@ test_requirements = ['pytest>=3', ]
 
 setuptools.setup(
    name='datagym',
-   version='0.7.0',
+   version='0.7.1',
    description='Datagym Python API Wrapper',
    author='Johannes Pflugmacher, Alexej Penner, Bartu Soykök',
    author_email='support@datagym.ai',

@@ -49,3 +49,7 @@ History
 0.7.0 (2022-02-07)
 ------------------
 * Adjust endpoints: Token in URL, BasicAuth as request parameter
+
+0.7.1 (2022-02-07)
+------------------
+* Upgrade numpy to 1.22.2, upgrade opencv-python to 4.5.5.62
