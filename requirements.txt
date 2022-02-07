@@ -5,7 +5,7 @@ tox==3.14.6
 coverage==5.0.4
 twine==1.14.0
 requests>=2.22.0
-numpy==1.18.3
+numpy==1.21.0
 opencv-python==4.2.0.34
 pytest==5.4.1
 pytest-runner==5.2

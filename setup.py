@@ -8,7 +8,7 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'requests[security]==2.22.0',
-    'numpy==1.18.3',
+    'numpy==1.21.0',
     'opencv-python==4.2.0.34',
     'pyopenssl==19.1.0',
     'ndg-httpsclient==0.5.1',
