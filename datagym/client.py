@@ -1,10 +1,11 @@
 import os
 
 import requests
+from requests.auth import HTTPBasicAuth
 import json
 import logging
 from pathlib import Path
-from typing import List, Dict, BinaryIO
+from typing import List, Dict, BinaryIO, Optional, Union
 from .endpoints import Endpoint
 from .models import Project, Dataset, Image, Video
 from datagym.exceptions.exceptions import (APIException,
@@ -34,13 +35,16 @@ class Client:
     MAX_NUM_URLS_PER_UPLOAD = 50
     logger = logging.getLogger(__name__)
 
-    def __init__(self, api_key: str) -> None:
+    def __init__(self, api_key: str, base_url: str = 'https://app.datagym.ai/',
+                 basic_auth: Optional[HTTPBasicAuth] = None) -> None:
         """ Initializes DataGym Client instance
-
+        
+        :param base_url: URL to your Datagym instance
         :param str api_key: The API key of your organization
+        :param Optional(HTTPBasicAuth) basic_auth: The basic authentification (username, password) for Datagym.ai
 
         """
-        self._endpoint = Endpoint()
+        self._endpoint = Endpoint(base_path=base_url)
         """ An instance of :class:`.Endpoint`.
 
         Provides the endpoints of DataGym's API
@@ -54,7 +58,7 @@ class Client:
         """
 
         self.__api_key = api_key
-        self.__auth = {"Authorization": f'Token {api_key}'}
+        self.__basic_auth = basic_auth
 
     def __repr__(self):
         return f'Client(api_key="{self.__api_key}")'
@@ -66,15 +70,17 @@ class Client:
             self,
             method: str,
             endpoint: str,
-            headers: dict or None,
-            json: list or dict = None,
-            data: BinaryIO or dict = None
+            headers: Optional[dict] = None,
+            auth: Optional[HTTPBasicAuth] = None,
+            json: Optional[Union[list, dict]] = None,
+            data: Optional[Union[BinaryIO, dict]] = None
     ) -> requests.Response:
         """ Send a HTTP request to a DataGym endpoint
 
         :param str method: The HTTP method (ex. GET, POST, PUT, etc.)
         :param str endpoint: The DataGym API endpoint
         :param dict headers: The HTTP request header
+        :param HTTPBasicAuth auth: The basic authentification for this request.
         :param dict json: The request body as json
         :param dict data: The request body
 
@@ -87,16 +93,19 @@ class Client:
             if json:
                 return requests.request(method=method,
                                         url=self._endpoint.BASE_PATH + endpoint,
+                                        auth=auth,
                                         headers=headers,
                                         json=json)
             elif data:
                 return requests.request(method=method,
                                         url=self._endpoint.BASE_PATH + endpoint,
+                                        auth=auth,
                                         headers=headers,
                                         data=data)
             else:
                 return requests.request(method=method,
                                         url=self._endpoint.BASE_PATH + endpoint,
+                                        auth=auth,
                                         headers=headers)
         except requests.exceptions.ConnectionError as e:
             raise e
@@ -112,14 +121,14 @@ class Client:
         """
         if response.ok:
             return True
-        elif json.loads(response.content)["key"] in WARNING_KEYS:
-            ClientExceptionNonFatal(self._msg_builder, self.logger, **json.loads(response.content))
-            return False
         elif response.status_code == 500:
             if response.content:
                 raise APIException(self._msg_builder, **json.loads(response.content))
             else:
                 response.raise_for_status()
+        elif json.loads(response.content)["key"] in WARNING_KEYS:
+            ClientExceptionNonFatal(self._msg_builder, self.logger, **json.loads(response.content))
+            return False
         else:
             if response.content:
                 raise ClientException(self._msg_builder, **json.loads(response.content))
@@ -128,8 +137,9 @@ class Client:
 
     def _is_token_valid(self) -> bool:
         response = self._request(method="HEAD",
-                                 endpoint=self._endpoint.PROJECT,
-                                 headers=self.__auth)
+                                 endpoint=self._endpoint.project(token=self.__api_key),
+                                 auth=self.__basic_auth,
+                                 )
 
         if not response.ok:
             raise InvalidTokenException(msg_builder=self._msg_builder,
@@ -149,8 +159,8 @@ class Client:
 
         """
         response = self._request(method="GET",
-                                 endpoint=self._endpoint.PROJECT,
-                                 headers=self.__auth)
+                                 endpoint=self._endpoint.project(token=self.__api_key),
+                                 auth=self.__basic_auth)
 
         if self._response_valid(response):
             content = json.loads(response.content)
@@ -195,8 +205,8 @@ class Client:
 
         """
         response = self._request(method="GET",
-                                 endpoint=self._endpoint.DATASET,
-                                 headers=self.__auth)
+                                 endpoint=self._endpoint.dataset(token=self.__api_key),
+                                 auth=self.__basic_auth)
 
         if self._response_valid(response):
             content = json.loads(response.content)
@@ -226,11 +236,11 @@ class Client:
         :rtype: Dict
 
         """
-        endpoint = self._endpoint.export_labels(project_id)
+        endpoint = self._endpoint.export_labels(project_id, token=self.__api_key)
 
         response = self._request(method="GET",
                                  endpoint=endpoint,
-                                 headers=self.__auth)
+                                 auth=self.__basic_auth)
 
         if self._response_valid(response):
 
@@ -243,7 +253,7 @@ class Client:
 
                     inner_response = self._request(method="GET",
                                                    endpoint=inner_endpoint,
-                                                   headers=self.__auth)
+                                                   auth=self.__basic_auth)
 
                     if self._response_valid(inner_response):
                         temp_label = json.loads(inner_response.content)
@@ -262,11 +272,11 @@ class Client:
         :rtype: Dict
 
         """
-        endpoint = self._endpoint.export_labels(project_id)
+        endpoint = self._endpoint.export_labels(project_id, token=self.__api_key)
 
         response = self._request(method="GET",
                                  endpoint=endpoint,
-                                 headers=self.__auth)
+                                 auth=self.__basic_auth)
 
         if self._response_valid(response):
 
@@ -279,7 +289,7 @@ class Client:
                         inner_endpoint = media_export['task_export_url'].replace(self._endpoint.BASE_PATH, "")
                         inner_response = self._request(method="GET",
                                                        endpoint=inner_endpoint,
-                                                       headers=self.__auth)
+                                                       auth=self.__basic_auth)
 
                         if self._response_valid(inner_response):
                             temp_label = json.loads(inner_response.content)
@@ -300,7 +310,7 @@ class Client:
 
         response = self._request(method="HEAD",
                                  endpoint=endpoint,
-                                 headers=None)
+                                 auth=self.__basic_auth)
 
         if self._response_valid(response):
             return response.url
@@ -327,11 +337,11 @@ class Client:
         :rtype: bytes
 
         """
-        endpoint = self._endpoint.download_media(video.id)
+        endpoint = self._endpoint.download_media(video.id, token=self.__api_key)
 
         response = self._request(method="GET",
                                  endpoint=endpoint,
-                                 headers=self.__auth)
+                                 auth=self.__basic_auth)
 
         if self._response_valid(response):
             inner_response = requests.request(method="GET",
@@ -347,14 +357,14 @@ class Client:
         :param file_path: The destination path for storing the Image
 
         """
-        endpoint = self._endpoint.download_media(image.id)
+        endpoint = self._endpoint.download_media(image.id, token=self.__api_key)
 
         path_dir = Path(file_path)
         path_file = path_dir.joinpath(image.image_name)
 
         response = self._request(method="GET",
                                  endpoint=endpoint,
-                                 headers=self.__auth)
+                                 auth=self.__basic_auth)
 
         if self._response_valid(response):
             with open(path_file, 'wb') as handler:
@@ -368,11 +378,11 @@ class Client:
         :rtype: bytes
 
         """
-        endpoint = self._endpoint.download_media(image.id)
+        endpoint = self._endpoint.download_media(image.id, token=self.__api_key)
 
         response = self._request(method="GET",
                                  endpoint=endpoint,
-                                 headers=self.__auth)
+                                 auth=self.__basic_auth)
 
         if self._response_valid(response):
             return response.content
@@ -397,12 +407,12 @@ class Client:
         headers = {
             'Content-type': 'application/json',
             "Accept": "application/json",
-            **self.__auth
         }
 
         response = self._request(method="POST",
-                                 endpoint=self._endpoint.DATASET,
+                                 endpoint=self._endpoint.dataset(token=self.__api_key),
                                  headers=headers,
+                                 auth=self.__basic_auth,
                                  json=data)
 
         if self._response_valid(response):
@@ -419,11 +429,11 @@ class Client:
         :rtype: bool
 
         """
-        endpoint = self._endpoint.add_dataset(project_id, dataset_id)
+        endpoint = self._endpoint.add_dataset(project_id, dataset_id, token=self.__api_key)
 
         response = self._request(method="POST",
                                  endpoint=endpoint,
-                                 headers=self.__auth)
+                                 auth=self.__basic_auth)
 
         if self._response_valid(response):
             return True
@@ -439,11 +449,11 @@ class Client:
         :rtype: bool
 
         """
-        endpoint = self._endpoint.remove_dataset(project_id, dataset_id)
+        endpoint = self._endpoint.remove_dataset(project_id, dataset_id, token=self.__api_key)
 
         response = self._request(method="DELETE",
                                  endpoint=endpoint,
-                                 headers=self.__auth)
+                                 auth=self.__basic_auth)
 
         if self._response_valid(response):
             return True
@@ -460,13 +470,13 @@ class Client:
         :rtype: List[Dict[str, str]]
 
         """
-        endpoint = self._endpoint.create_image(dataset_id)
+        endpoint = self._endpoint.create_image(dataset_id, token=self.__api_key)
 
         if len(image_url_list) < self.MAX_NUM_URLS_PER_UPLOAD:
 
             response = self._request(method="POST",
                                      endpoint=endpoint,
-                                     headers=self.__auth,
+                                     auth=self.__basic_auth,
                                      json=image_url_list)
             if self._response_valid(response):
                 return json.loads(response.content)
@@ -486,7 +496,7 @@ class Client:
 
                 partial_response = self._request(method="POST",
                                                  endpoint=endpoint,
-                                                 headers=self.__auth,
+                                                 auth=self.__basic_auth,
                                                  json=slice)
 
                 if self._response_valid(partial_response):
@@ -504,11 +514,11 @@ class Client:
         :rtype: bool
 
         """
-        endpoint = self._endpoint.delete_media(image.id)
+        endpoint = self._endpoint.delete_media(image.id, token=self.__api_key)
 
         response = self._request(method="DELETE",
                                  endpoint=endpoint,
-                                 headers=self.__auth)
+                                 auth=self.__basic_auth)
 
         if self._response_valid(response):
             return True
@@ -521,13 +531,13 @@ class Client:
         :param Dict label_data: Labels in JSON Format. See DataGym Docs for more information
         :returns: List of Errors if JSON is malformed or data is invalid
         """
-        endpoint = self._endpoint.import_labels(project_id=project_id)
+        endpoint = self._endpoint.import_labels(project_id=project_id, token=self.__api_key)
 
         if len(label_data) < self.MAX_NUM_URLS_PER_UPLOAD:
 
             response = self._request(method="POST",
                                      endpoint=endpoint,
-                                     headers=self.__auth,
+                                     auth=self.__basic_auth,
                                      json=label_data)
 
             if self._response_valid(response):
@@ -548,7 +558,7 @@ class Client:
 
                 partial_response = self._request(method="POST",
                                                  endpoint=endpoint,
-                                                 headers=self.__auth,
+                                                 auth=self.__basic_auth,
                                                  json=mini_batch)
 
                 if self._response_valid(partial_response):
@@ -569,7 +579,7 @@ class Client:
         :rtype: Image or None
 
         """
-        endpoint = self._endpoint.upload_media(dataset_id)
+        endpoint = self._endpoint.upload_media(dataset_id, token=self.__api_key)
 
         if not image_name:
             image_name = os.path.basename(image_path)
@@ -578,12 +588,12 @@ class Client:
 
         headers = {
             'X-filename': image_name,
-            **self.__auth
         }
 
         response = self._request(method="POST",
                                  endpoint=endpoint,
                                  headers=headers,
+                                 auth=self.__basic_auth,
                                  data=files)
 
         if self._response_valid(response):
@@ -597,18 +607,18 @@ class Client:
         :param label_config:
         :return: bytes if successful, else None
         """
-        clear_endpoint = self._endpoint.upload_label_config(config_id)
-        upload_endpoint = self._endpoint.clear_label_config(config_id)
+        clear_endpoint = self._endpoint.upload_label_config(config_id, token=self.__api_key)
+        upload_endpoint = self._endpoint.clear_label_config(config_id, token=self.__api_key)
 
         clear_response = self._request(method="DELETE",
                                        endpoint=clear_endpoint,
-                                       headers=self.__auth)
+                                       auth=self.__basic_auth)
 
         if self._response_valid(clear_response):
 
             upload_response = self._request(method="PUT",
                                             endpoint=upload_endpoint,
-                                            headers=self.__auth,
+                                            auth=self.__basic_auth,
                                             json=label_config)
 
             if self._response_valid(upload_response):
