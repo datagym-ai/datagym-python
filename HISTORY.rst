@@ -45,3 +45,7 @@ History
 ------------------
 * Added Video functionalities
 * Renamed most instances of image_id to media_id to allow agnostic media usage
+
+0.7.0 (2022-02-07)
+------------------
+* Adjust endpoints: Token in URL, BasicAuth as request parameter
