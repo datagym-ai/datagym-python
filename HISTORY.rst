@@ -53,3 +53,7 @@ History
 0.7.1 (2022-02-07)
 ------------------
 * Upgrade numpy to 1.22.2, upgrade opencv-python to 4.5.5.62
+
+0.7.2 (2022-02-09)
+------------------
+* Tab indent fix

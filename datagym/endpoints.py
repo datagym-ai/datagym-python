@@ -12,7 +12,7 @@ class Endpoint:
     PROJECT: str = "api/v1/project?token={token}"
     DATASET: str = "api/v1/dataset?token={token}"
     MEDIA: str = "api/v1/media?token={token}"
- 	BASE_PATH: str = "https://app.datagym.ai/"
+    BASE_PATH: str = "https://app.datagym.ai/"
     
     _export_labels: str = "api/v1/export/{project_id}?token={token}"
     _export_labels_url: str = "api/v1/export/{project_id}?token={token}"
